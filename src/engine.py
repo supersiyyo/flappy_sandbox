@@ -23,10 +23,10 @@ class GameEnvironment:
         gap_y = random.randint(min_gap_y, max_gap_y)
         self.pipes.append(Pipe(self.settings, self.settings.SCREEN_WIDTH, gap_y))
 
-    def update(self, action=0):
-        """Advances physics by one frame."""
+    def step(self, action=0):
+        """Advances physics by one frame. Returns (obs, reward, done, info)."""
         if self.game_over:
-            return
+            return self._get_observation(), 0, True, {}
 
         # Handle Action (1 = Jump, 0 = Do nothing)
         if action == 1:
@@ -54,6 +54,34 @@ class GameEnvironment:
         self.pipes = [pipe for pipe in self.pipes if pipe.x + self.settings.PIPE_WIDTH > 0]
 
         self._check_collisions()
+        
+        # Reward is usually 1 for staying alive, plus any score gains (which are handled implicitly if we just survive, or we return 1 per step)
+        # Using 1 per step to encourage surviving.
+        reward = 1.0 if not self.game_over else -1.0
+        
+        return self._get_observation(), reward, self.game_over, {"score": self.score}
+
+    def _get_observation(self):
+        """Returns [bird_y, bird_velocity, dist_to_next_pipe, next_pipe_gap_y]"""
+        bird_y = self.bird.rect.y
+        bird_velocity = self.bird.velocity
+        
+        # Find the closest pipe in front of the bird
+        closest_pipe = None
+        for pipe in self.pipes:
+            if pipe.x + self.settings.PIPE_WIDTH > self.bird.rect.x:
+                closest_pipe = pipe
+                break
+                
+        if closest_pipe:
+            dist_to_next_pipe = closest_pipe.x - self.bird.rect.x
+            next_pipe_gap_y = closest_pipe.gap_y
+        else:
+            # Fallbacks if no pipe is spawned yet or weird state
+            dist_to_next_pipe = self.settings.SCREEN_WIDTH
+            next_pipe_gap_y = self.settings.SCREEN_HEIGHT // 2
+            
+        return [bird_y, bird_velocity, dist_to_next_pipe, next_pipe_gap_y]
 
     def _check_collisions(self):
         """Detects precise bounding box collisions."""
