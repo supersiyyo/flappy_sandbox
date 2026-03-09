@@ -5,8 +5,10 @@ from src.engine import GameEnvironment
 from src.renderer import Renderer
 from src.agent import RandomAgent, HeuristicAgent
 from src.llm_parser import LLMParser
+from dotenv import load_dotenv
 
 def main():
+    load_dotenv()
     settings = Settings()
     engine = GameEnvironment(settings)
     renderer = Renderer(settings)
