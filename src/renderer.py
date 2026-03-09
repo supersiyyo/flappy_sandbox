@@ -10,7 +10,7 @@ class Renderer:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 36)
 
-    def draw(self, engine):
+    def draw(self, engine, user_text="", input_active=True):
         """Takes engine state and draws it entirely visually."""
         self.screen.fill((135, 206, 235))  # Sky blue
 
@@ -28,8 +28,24 @@ class Renderer:
             self.screen.blit(score_surf, (10, 10))
         else:
             game_over_surf = self.font.render("Game Over! Space to Restart", True, (255, 0, 0))
-            text_rect = game_over_surf.get_rect(center=(self.settings.SCREEN_WIDTH//2, self.settings.SCREEN_HEIGHT//2))
+            text_rect = game_over_surf.get_rect(center=(self.settings.SCREEN_WIDTH//2, self.settings.SCREEN_HEIGHT//2 - 50))
             self.screen.blit(game_over_surf, text_rect)
+
+        # Draw Text Input Overlay
+        if input_active:
+            input_box = pygame.Rect(10, self.settings.SCREEN_HEIGHT - 50, self.settings.SCREEN_WIDTH - 20, 40)
+            pygame.draw.rect(self.screen, (255, 255, 255), input_box)
+            pygame.draw.rect(self.screen, (0, 0, 0), input_box, 2) # Border
+            
+            prompt_surf = self.font.render("Dir:", True, (0, 0, 0))
+            self.screen.blit(prompt_surf, (input_box.x + 5, input_box.y + 8))
+            
+            txt_surf = self.font.render(user_text, True, (0, 0, 0))
+            # Handle text overflow visually
+            text_rect_width = max(input_box.w - 55, 10)
+            self.screen.set_clip(pygame.Rect(input_box.x + 50, input_box.y, text_rect_width, input_box.h))
+            self.screen.blit(txt_surf, (input_box.x + 50, input_box.y + 8))
+            self.screen.set_clip(None)
 
         pygame.display.flip()
         
