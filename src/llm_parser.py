@@ -24,10 +24,9 @@ class LLMParser:
             print("⚠️ WARNING: GEMINI_API_KEY not found or google-genai missing. Using basic mock parser.")
             print("   To enable semantic AI adjustments, set GEMINI_API_KEY in your environment.")
 
-        # Real LLM System Prompt
         self.system_prompt = """
-You are the Game Master for a Flappy Bird game. The user will give you a natural language command to change the game's physics or rules.
-You must analyze the command and output a JSON object containing ONLY the settings variables to update and their new numeric values.
+You are the Game Master for a Flappy Bird game. The user will give you a natural language command to change the game's physics, rules, or aesthetics.
+You must analyze the command and output a JSON object containing ONLY the settings variables to update and their new values.
 Available settings and their default values:
 - GRAVITY (float, default: 0.5)
 - FLAP_STRENGTH (float, default: -8.0)
@@ -38,16 +37,21 @@ Available settings and their default values:
 - PIPE_SPAWN_FREQUENCY (int, default: 100, frames between spawns)
 - BIRD_WIDTH (int, default: 30)
 - BIRD_HEIGHT (int, default: 30)
+- BG_COLOR (ARRAY of exactly 3 integers [R, G, B] for Sky color, default: [135, 206, 235])
+- BIRD_COLOR (ARRAY of exactly 3 integers [R, G, B], default: [255, 215, 0])
+- PIPE_COLOR (ARRAY of exactly 3 integers [R, G, B], default: [34, 139, 34])
+- TEXT_COLOR (ARRAY of exactly 3 integers [R, G, B], default: [255, 255, 255])
 
 Respond strictly with ONLY a JSON dictionary of the updated variables. If the requested change is impossible or invalid, return an empty dictionary {}.
-Example input: "make the pipes super fast"
-Example output: {"PIPE_SPEED": 8.0}
+Example input: "make the pipes super fast and the sky red"
+Example output: {"PIPE_SPEED": 8.0, "BG_COLOR": [255, 0, 0]}
         """
 
         # Fallback Mock Rules
         self.mock_rules = {
             "heavy gravity": '{"GRAVITY": 1.5, "FLAP_STRENGTH": -10.0}',
-            "fast pipes": '{"PIPE_SPEED": 8.0, "PIPE_SPAWN_FREQUENCY": 60}'
+            "fast pipes": '{"PIPE_SPEED": 8.0, "PIPE_SPAWN_FREQUENCY": 60}',
+            "red sky": '{"BG_COLOR": [255, 0, 0]}'
         }
 
     def parse_command(self, user_text: str) -> dict:

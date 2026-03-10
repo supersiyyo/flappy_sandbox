@@ -19,44 +19,59 @@ def main():
     obs = engine._get_observation()
     
     user_text = ""
-    input_active = True
+    input_active = False
+    is_ai_playing = True
 
     running = True
     while running:
+        action = 0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE and engine.game_over:
-                    # Space ONLY restarts if game over, to allow typing spaces normally
-                    engine.reset()
-                    obs = engine._get_observation()
-                elif input_active:
+                if input_active:
+                    # Chat Focus Mode
                     if event.key == pygame.K_RETURN:
-                        # Send text to Layer 3!
                         if user_text:
                             updates = llm.parse_command(user_text)
                             if updates:
                                 settings.update(updates)
                                 print(f"Applied updates: {updates}")
                             user_text = ""
+                        input_active = False  # Exit chat
+                    elif event.key == pygame.K_ESCAPE:
+                        input_active = False  # Cancel chat
                     elif event.key == pygame.K_BACKSPACE:
                         user_text = user_text[:-1]
                     else:
-                        # Only allow basic typing if not escaping or doing weird commands
                         if event.unicode.isprintable():
                             user_text += event.unicode
+                else:
+                    # Game Control Mode
+                    if event.key == pygame.K_SPACE:
+                        if engine.game_over:
+                            # Restart the game if dead
+                            engine.reset()
+                            obs = engine._get_observation()
+                        elif not is_ai_playing:
+                            # Human jumps if they press Space and AI is off
+                            action = 1
+                    elif event.key == pygame.K_t:
+                        # Toggle Modes
+                        is_ai_playing = not is_ai_playing
+                    elif event.key == pygame.K_RETURN:
+                        # Enter Chat Focus Mode
+                        input_active = True
         
-        # Agent decides next action based on previous observation
-        action = 0
-        if not engine.game_over:
+        # Agent decides next action (only if playing and not dead)
+        if is_ai_playing and not engine.game_over:
             action = agent.predict(obs)
         
-        # Step the environment forward based on Agent's action
+        # Step the environment forward
         obs, reward, done, info = engine.step(action=action)
             
-        # Decoupled Draw tick
-        renderer.draw(engine, user_text=user_text, input_active=input_active)
+        # Draw the frame
+        renderer.draw(engine, user_text=user_text, input_active=input_active, is_ai_playing=is_ai_playing)
         renderer.tick()
 
     renderer.quit()

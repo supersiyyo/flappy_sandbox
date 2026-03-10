@@ -20,6 +20,12 @@ class Settings:
         self.BIRD_X = 100
         self.BIRD_WIDTH = 30
         self.BIRD_HEIGHT = 30
+        
+        # Aesthetic settings (Mutable via LLM)
+        self.BG_COLOR = (135, 206, 235)       # Sky blue
+        self.BIRD_COLOR = (255, 215, 0)       # Gold/Yellow
+        self.PIPE_COLOR = (34, 139, 34)       # Forest green
+        self.TEXT_COLOR = (255, 255, 255)     # White
 
     def update(self, config_updates: dict):
         """Allows dynamically updating the physics configuration mid-game."""
